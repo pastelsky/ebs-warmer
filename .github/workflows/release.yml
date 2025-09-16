@@ -1,4 +1,4 @@
-name: Release Rust Binary
+name: Release binaries for AMD64 and AARCH64
 
 on:
   push:
@@ -9,8 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  create-release:
-    name: Create Release
+  create-release-amd-64:
+    name: Create release for AMD64
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -23,19 +23,56 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y build-essential libaio-dev liburing-dev
 
       - name: Build release binary with all features
-        run: cargo build --release --manifest-path rust-cache-warmer/Cargo.toml
+        run: cargo build --release --manifest-path Cargo.toml
 
       - name: Build release binary with debug symbols
-        run: cargo build --profile profiling --manifest-path rust-cache-warmer/Cargo.toml
-
-      - name: Rename binaries for release assets
+        run: cargo build --profile profiling --manifest-path Cargo.toml
+     
+      - name: Rename binaries
         run: |
-          mv rust-cache-warmer/target/release/rust-cache-warmer rust-cache-warmer-linux-amd64
-          mv rust-cache-warmer/target/profiling/rust-cache-warmer rust-cache-warmer-linux-amd64-profiling
+          mv target/release/ebs-warmer ebs-warmer-linux-amd64
+          mv target/profiling/ebs-warmer ebs-warmer-linux-amd64-profiling
 
-      - name: Create GitHub Release and upload binaries
+      - name: Create GitHub release and upload binaries
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            rust-cache-warmer-linux-amd64
-            rust-cache-warmer-linux-amd64-profiling 
+            ebs-warmer-linux-amd64
+            ebs-warmer-linux-amd64-profiling 
+
+  create-release-aarch64:
+    name: Create release for AARCH64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential libaio-dev liburing-dev
+
+      - name: Add aarch64 target
+        run: rustup target add aarch64-unknown-linux-gnu
+
+      - name: Install cross-compilation dependencies
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Build release binary for aarch64
+        run: cargo build --release --target aarch64-unknown-linux-gnu --manifest-path Cargo.toml
+
+      - name: Build release binary with debug symbols for aarch64
+        run: cargo build --profile profiling --target aarch64-unknown-linux-gnu --manifest-path Cargo.toml
+
+      - name: Rename binaries
+        run: |
+          mv target/aarch64-unknown-linux-gnu/release/ebs-warmer ebs-warmer-linux-aarch64
+          mv target/aarch64-unknown-linux-gnu/profiling/ebs-warmer ebs-warmer-linux-aarch64-profiling
+          
+      - name: Create GitHub release and upload binaries
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ebs-warmer-linux-aarch64
+            ebs-warmer-linux-aarch64-profiling

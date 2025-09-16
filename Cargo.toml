@@ -1,6 +1,6 @@
 [package]
-name = "rust-cache-warmer"
-version = "1.3.0"
+name = "ebs-warmer"
+version = "2.1.0"
 edition = "2021"
 
 [dependencies]
